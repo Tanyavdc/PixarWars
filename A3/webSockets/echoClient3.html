@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+        <head>
+		<meta charset="utf-8">
+		<script src="jquery-2.1.0.js"></script>
+		<meta charset="utf-8" name="viewport" content="user-scalable=0">
+		<script src="GameChoice.js"></script>
+		<script src="ww.js"></script>
+	</head>
+	<body>
+		<h3>PIXAR WARS</h3>
+		<form> 
+			  <input type="button" id="play" value="PLAY"/>
+		</form>
+
+			<div id="Pixar_Worlds" display=block>
+			<div id="Worlds" display=block style="overflow-y:scroll">
+				<p>Create a World</p>
+				<input type ="text" id="create_form" value="Enter new World name"> <input type = "radio" name= "world" id= "custom"/><br>
+				<p> or Choose a World</p>
+				<img src="Worlds/MonstersInc.jpg"  style="width:280px;height:200px"><input type="radio" name="world" id="monstersInc" value="Monsters Inc"><ul id="monstersInc_players" display=inline-block style="overflow-y:scroll"></ul><br> 
+				<img src="Worlds/Incredibles.jpg"  style="width:280px;height:200px"><input type="radio" name="world" id="incredibles" value="The Incredibles"><ul id="incredibles_players" display=inline-block style="overflow-y:scroll"></ul><br>
+				<img src="Worlds/FINDING-NEMO.jpg" style="width:280px;height:200px"><input type="radio" name = "world" id = "nemo" value="Finding Nemo"/><ul id="nemo_players" display=inline-block style="overflow-y:scroll"></ul><br>
+			</div>
+			<td> <div id="stage" align = "left"> </div></td> 
+				<table id='killcounts' float= 'left' style='border:1px solid black, "overflow-y:scroll";'> <caption>Kill Counts</caption></table>
+
+			
+			<div id = "legend">
+				
+							<table style = "width:15%" border = "1">
+									<tr>
+										<td><img src="icons/blankImage.gif" id="blankImage" style="width:0px;height:0px"></td>
+										<img src="icons/blankImage.gif" id="InvisibleMonster" style="width:30px;height:30px">
+										<td><p style = "color:black">Empty Square</p></td>
+									</tr>
+									<tr>
+										<td><img src="icons/emblem-package-2-24.png" id="boxImage" style="width:30px;height:30px"></td>
+										<td><p style = "color:black">Box</p></td>
+									</tr>
+									<tr>
+										<td><img src="icons/clipboo21.gif" id="playerImage" style="width:30px;height:30px"></td>                             
+										<td><p style = "color:black">You</p></td>
+									</tr>
+										<tr>
+										<td><img src="icons/face-cool-24.png" id="otherPlayerImage" style="width:30px;height:30px"></td>                             
+										<td><p style = "color:black">Other Players</p></td>
+									</tr>
+									<tr>
+										<td><img src="icons/scream_canister.png" id="wallImage" style="width:40px;height:40px"></td>                                  
+										<td><p style = "color:black">Wall</p></td>
+									</tr>
+									<tr>
+										<td><img src="icons/secretbox.png" id="secretBoxImage" style="width:20px;height:20px"></td>                                  
+										<td><p style = "color:black">SecretBox</p></td>
+									</tr>
+								
+									<tr>
+										<td><img src="icons/James_P._Sullivan.png" id="monsterImage" style="width:30px;height:30px"></td>                          
+										<td><p style = "color:black">Monster</p></td>
+									</tr>
+									
+								</table>
+
+			</div>
+							
+							
+		<div id="controls_display">
+							<table class="controls" bgcolor="ffffff" >
+								<tr>
+									<td><img src="icons/north_west.svg" onclick = "stage.movePlayer(-1,-1,this.id)" style="width:40px;height:40px" id = "nw"/></td>
+									<td><img src="icons/north.svg" onclick = "stage.movePlayer(0,-1,this.id)" style="width:40px;height:40px"id = "n"/></td>
+									<td><img src="icons/north_east.svg" onclick = "stage.movePlayer(1,-1,this.id)"  style="width:40px;height:40px"id = "ne"/></td>
+								</tr>
+								<tr>
+									<td><img src="icons/west.svg" onclick = "stage.movePlayer(-1,0,this.id)" style="width:40px;height:40px" id = "w"/></td>
+									<td>&nbsp;</td>
+									<td><img src="icons/east.svg" onclick = "stage.movePlayer(1,0,this.id)"  style="width:40px;height:40px"id = "e"/></td>
+								</tr>
+								<tr>
+									<td><img src="icons/south_west.svg" onclick = "stage.movePlayer(-1,1,this.id)" style="width:40px;height:40px" id = "sw"/></td>
+									<td><img src="icons/south.svg" onclick = "stage.movePlayer(0,1,this.id)"style="width:40px;height:40px"  id = "s"/></td>
+									<td><img src="icons/south_east.svg" onclick = "stage.movePlayer(1,1,this.id)" style="width:40px;height:40px" id = "se"/></td>
+								</tr>
+							
+							</table>
+							</br>
+							<input type = "button" id = "logout" value = "logout"/>
+			
+		</div>
+
+		<script type="text/javascript">
+		var player_pictures = [];
+		var monster_pictures = [];
+		var player_is_new=true;
+		var in_play = false;
+		var socket; 
+		var world;
+		var worlds = []; 
+		var all_players;
+		var players_in_world = []; 
+		var killcounts;
+		var togglestate = true;
+		var socket; 
+		var custom_worlds=[];
+
+		actors = [];
+		
+		blankImageSrc=document.getElementById('blankImage').src;
+		monsterImageSrc=document.getElementById('monsterImage').src;
+		playerImageSrc=document.getElementById('playerImage').src;
+		otherImageSrc = document.getElementById('otherPlayerImage').src;
+		boxImageSrc=document.getElementById('boxImage').src;
+		wallImageSrc=document.getElementById('wallImage').src;
+		secretBoxImageSrc = document.getElementById("secretBoxImage").src;
+		
+		function getStageId(x,y)
+		{ 
+			return (x + "," + y);
+			 
+		}
+
+
+		// STAGE CLASS 
+		function Stage(width, height, stageElementID){
+			this.SPAWNED_MONSTERS=5;   // constant number of monsters initially put on the stage 
+			this.dead_monsters=0;
+			this.actors= []; // all actors on this stage (monsters, player, boxes, ...)
+			this.player=null; // a special actor, the player
+			this.clientActors = [];
+			// the logical width and height of the stage
+			this.width=width;
+			this.height=height;
+
+			// the element containing the visual representation of the stage
+			this.stageElementID=stageElementID;
+
+			// take a look at the value of these to understand why we capture them this way
+			// an alternative would be to use 'new Image()'
+
+		}
+
+	
+
+	Stage.prototype.getActor=function(x, y){
+		for(var i = 0; i<this.actors.length; i++)
+		{
+			if(this.actors[i].x == x && this.actors[i].y == y){
+				return this.actors[i];
+			}		
+		}
+		return null;
+	}
+
+	Stage.prototype.moveBox=function(box,x,y){
+	 
+
+		var new_x = box.x + x;
+		var new_y = box.y + y;
+
+
+		// WALL CASE 
+		// dont move			
+		if(document.getElementById(getStageId(new_x,new_y)).src == wallImageSrc || !in_bounds(new_x,new_y)){
+	 		return false;
+			}
+
+		// BASE CASE
+		// spot where box is trying to move is not occupied 
+		if (document.getElementById(getStageId(new_x,new_y)).src == blankImageSrc){
+				
+				// MOVE
+				moveActor(box.id, true, x, y);
+				check_monsters(box.x, box.y);
+				tellServer("move", true, box.id, [x,y]);
+				return true;      // tell player and/or other boxes that it has moved 
+		}
+
+
+		// BOX CASE	
+		// spot where box is trying to move is occupied by a box; try to push it 
+		if(document.getElementById(getStageId(new_x,new_y)).src == boxImageSrc){
+
+			var next_box = this.getActor(new_x,new_y);
+			if(this.moveBox(next_box, x, y))       // if the next box moved, then this box can move
+			{
+					// MOVE 
+					moveActor(box.id, true, x, y);
+					check_monsters(box.x, box.y);
+					tellServer("move", true, box.id, [x,y]);
+					return true;
+			}                                      	
+			else{
+			
+					return false;
+			}
+		}
+	// if spot is occupied by wall or monster, don't move 
+	}
+	
+
+
+		// move player
+	Stage.prototype.movePlayer= function(dx,dy,id){
+		var dx;
+		var dy; 
+		var rotateDegrees;
+		var leftToRight;
+		var frontToBack
+		if (id instanceof KeyboardEvent){
+			id = id.charCode;
+
+			if(id == '113'){
+				dx = -1;
+				dy = -1;
+			}
+			if(id == '119'){
+				dx = 0;
+				dy = -1;
+			}
+			if(id == '101'){
+				dx = 1;
+				dy = -1;
+			}	
+			if(id == '97'){
+				dx = -1;
+				dy = 0;
+			}
+			if(id == '100'){
+				dx = 1;
+				dy = 0;
+			}
+			if(id == '122'){
+				dx = -1;
+				dy = 1;
+			}
+			if(id == '115'){
+				dx = 0;
+				dy = 1;
+			}
+			if(id == '99'){
+				dx = 1;
+				dy = 1;
+			}
+		}
+
+		
+		// see if player can move 
+		var rx = this.player.x + dx;
+		var ry = this.player.y + dy;
+	
+		if (in_bounds(rx,ry)){
+			// object at this coordinate
+			var obj = document.getElementById(getStageId(rx,ry)).src;
+			// check what is there 
+			// if nothing
+			if(obj == blankImageSrc){ 
+			    // redraw player 
+				setImage(this.player.x, this.player.y, blankImageSrc);
+				setImage(rx, ry, this.player.src);
+				// move player 
+				this.player.x = rx;
+				this.player.y = ry; 
+				// tell the server 
+				tellServer("move", false, stage.player.id, [dx,dy]);        // ID 
+			}
+			else if(obj == boxImageSrc){
+					var box = this.getActor(rx, ry); //get the box
+					if(this.moveBox(box,dx,dy))
+					{
+						//redraw player
+						setImage(this.player.x, this.player.y, blankImageSrc);
+						setImage(rx, ry, this.player.src);
+						// move player
+						this.player.x=rx;
+						this.player.y=ry;
+						// check if you killed a monster 
+						check_monsters(box.x, box.y);
+
+						tellServer("move", false, stage.player.id, [dx,dy]);    // PASS PLAYER ID 
+				
+					}
+					
+			}
+			else if(obj == monsterImageSrc){
+				setImage(this.player.x, this.player.y, blankImageSrc);
+				this.player.x = rx;
+				this.player.y = ry; 
+				// tell the server 
+				tellServer("move", false, stage.player.id, [dx,dy]);      // PASS NULL AS BOXES ID 
+			}
+			else{
+					return
+				}
+
+		}
+		
+	}
+
+	Stage.prototype.isDead=function(monster){
+		if(monster.src == monsterImageSrc){
+			// check if surrounded
+			if(((document.getElementById(getStageId(monster.x +1, monster.y+1)).src) != blankImageSrc) && ((document.getElementById(getStageId(monster.x +1, monster.y)).src) != blankImageSrc) && 					((document.getElementById(getStageId(monster.x +1, monster.y-1)).src) != blankImageSrc) && ((document.getElementById(getStageId(monster.x , monster.y+1)).src) != blankImageSrc) && 				((document.getElementById(getStageId(monster.x, monster.y-1)).src) !=blankImageSrc) && 
+			((document.getElementById(getStageId(monster.x -1, monster.y+1)).src) != blankImageSrc) && ((document.getElementById(getStageId(monster.x -1, monster.y)).src) != blankImageSrc) && 
+			((document.getElementById(getStageId(monster.x -1, monster.y-1)).src) != blankImageSrc)){
+				// kill surrounded monster 
+				var deadPosition = [];
+			
+				deadPosition.push(monster.x);
+				deadPosition.push(monster.y);
+				setImage(monster.x,monster.y,blankImageSrc);
+				stage.actors.splice(stage.actors.indexOf(monster), 1);
+				this.player.killCount +=1;
+				tellServer("dead", false, monster.id, null);
+	
+				
+				//this.dead_monsters ++;
+				// if all monsters have been cleared off of the screen
+				
+				return true;
+		
+
+		    }	
+		}
+		
+	
+		return false;
+			
+		
+	}
+	
+	function check_monsters(x,y){
+		for (var i = 0; i < stage.actors.length; i ++){
+			var a = stage.actors[i];
+			if (a instanceof Monster){
+				if ((a.x == x + 1 || a.x == x -1 || a.x ==x ) && (a.y == y + 1 || a.y == y -1 || a.y == y )){
+					stage.isDead(a);
+					return;
+					
+				}
+			}
+		}
+	}
+
+		function in_bounds(x,y){
+
+			if ((x >= 20) || (x <= 1) || (y >= 20) || (y <= 1)) {
+			return false;
+			}
+			return true;
+			}
+					
+		var stage = null;
+		var stage  = new Stage(20,20,"stage");
+		
+		
+		function tellServer(action, is_box, id, data){          // ID IS BOX'S ID 
+			// player wants to move 
+			var msg;
+			if (action == "move"){
+
+				var this_dx = data[0];
+				var this_dy = data[1];
+				// write a message to the server 
+				socket.send(JSON.stringify({world: world, operation:"move", box:is_box, id:id, pushed_by:stage.player.id, dx: this_dx, dy: this_dy}));          // BOX ID IS ID ID IS PLAYERS ID 
+			} 
+			else if(action == "dead"){
+				socket.send(JSON.stringify({world: world, operation: "dead", id: id, killed_by: stage.player.id}));    
+				
+			
+			}	
+		}
+
+
+	
+
+		function initializeStage(){
+			// make an empty stage
+
+			var stage="<table align= 'left' style='border:2px solid black;'>";	
+			for(var y=1;y<=20;y++){
+				stage+="<tr>";
+				for(var x=1;x<=20;x++){
+					stage=stage+'<td><img src="'+blankImageSrc+'" id="' + x + ',' + y + '" height = 35px"' + '" width = 35px"' + '</td>';
+				}
+				stage+="'</tr>";
+			}
+			stage+="</table>";
+			document.getElementById("stage").innerHTML=stage;	
+			// add walls around the stage 
+
+			var i = 1;
+
+			while (i<=20){
+				setImage(20, i, wallImageSrc);
+				var wall = new Wall(20, i, wallImageSrc);
+				addActor(wall);
+				setImage(i,20,wallImageSrc);
+				var wall = new Wall(i, 20, wallImageSrc);
+				addActor(wall);
+				setImage(1,i,wallImageSrc);
+				var wall = new Wall(1, i, wallImageSrc);
+				addActor(wall);
+				setImage(i,1,wallImageSrc);
+				var wall = new Wall(i, 1, wallImageSrc);
+				addActor(wall);
+				i++;
+			}
+		}
+		
+		function populateStage(){
+
+			for(var i=0;i<stage.actors.length;i++)
+			{
+				// draw each actor at their current position
+				setImage(stage.actors[i].x, stage.actors[i].y, stage.actors[i].src);
+			}
+
+		}
+
+				
+		// PLAYER CLASS 
+		function Player(id,x,y,src){
+			this.x = x;
+			this.y = y;
+			this.src = src;	
+			this.id=id;
+			this.killCount = 0;
+			}
+
+
+
+		//WALL CLASS
+		 
+		function Wall(x,y,src){
+			this.x = x;
+			this.y = y;
+			this.src = src;
+		}
+
+
+
+		// MONSTER CLASS 
+		function Monster(x,y,src){
+			this.x = x;
+			this.y = y;
+			this.src = src;
+			this.Rx = x;
+			this.Ry = y;
+			this.id;
+
+
+		}
+
+		
+		// SECRET BOX CLASS 
+
+		function SecretBox(x,y,src){
+			this.x = x;
+			this.y = y;
+			this.src = src;
+			this.id;
+		}
+
+		// BOX CLASS 
+
+		function Box(x,y,src){
+			this.x = x;
+			this.y = y;
+			this.src = src;
+			this.id;
+		}	
+		Box.prototype.move=function(rx, ry){
+			this.x =rx;
+			this.y =ry;
+
+		}
+		
+		
+	
+		// OPPONENT CLASS	
+
+		function Opponent(id,x,y,src){
+			this.x = x;
+			this.y = y;
+			this.src = src;
+			this.id = id; 
+			}
+
+		
+
+		function setImage(x, y, src)
+		{
+			
+			document.getElementById(getStageId(x,y)).src = src;
+
+		}
+		function addActor(actor){
+			actors.push(actor);
+	
+		}
+		
+		function addPlayer(id, x, y){
+			var op = new Player (id, x,y,otherImageSrc);
+			stage.actors.push(op);
+			// put new player on the board 
+			setImage(x, y, op.src);  // CHANGE TO OPPONENTS IMAGE 
+		}
+
+	
+
+		function moveActor(id, is_box, dx, dy){
+			for (var i=0; i<stage.actors.length;i++){
+				if (stage.actors[i].id == id){
+					// move the actor on the stage
+					if (!is_box){
+						setImage(stage.actors[i].x, stage.actors[i].y, blankImageSrc);
+				
+					}
+					setImage(stage.actors[i].x + dx, stage.actors[i].y+ dy, stage.actors[i].src);
+					// update the actors co-ordinates 
+					stage.actors[i].x = stage.actors[i].x + dx;
+					stage.actors[i].y = stage.actors[i].y + dy;	
+			}
+		}
+	}
+	
+
+		function spawnActors(data){
+			var i;
+			for(i=0;i<data.actors.length;i++){
+				
+				if (data.actors[i].type == "box"){
+					var x = data.actors[i].x;
+					var y = data.actors[i].y;
+					
+					// make a box 
+					var box = new Box(x,y, boxImageSrc);
+					box.id = data.actors[i].id;
+					
+					stage.actors.push(box);
+				}
+				if (data.actors[i].type == "secretbox"){
+					var x = data.actors[i].x;
+					var y = data.actors[i].y;
+					
+					// make a box 
+					var secretbox = new SecretBox(x,y, secretBoxImageSrc);
+					secretbox.id=data.actors[i].id;
+					stage.actors.push(secretbox);
+				}
+				if (data.actors[i].type == "monster"){
+					var x = data.actors[i].x;
+					var y = data.actors[i].y;
+					
+					// make a box 
+					var monster = new Monster(x,y,monsterImageSrc);
+					monster.id=data.actors[i].id;
+					stage.actors.push(monster);
+				}
+				if (data.actors[i].type == "player" ){
+					var x = data.actors[i].x;
+					var y = data.actors[i].y;
+					var id = data.actors[i].id;
+					// set up the player  
+					if ( i == (data.actors.length - 1) ){
+						var player = new Player(id, x,y,playerImageSrc);
+						stage.player = player;
+						}
+					else{
+						var player = new Player(id, x,y, otherImageSrc);
+					}
+					stage.actors.push(player);				
+					}  
+				
+			}
+			players_in_world.push(stage.player.id);
+		} 
+		
+// to prevent spaces in create world name input 
+$("#create_form").keyup(function () {
+    var textValue = $(this).val();
+    textValue =textValue.replace(/ /g,"_");
+    $(this).val(textValue);
+});
+
+$("#logout").click(function () {
+	logout();
+});
+
+ // get a world object representation given a string of worlds name
+	
+	function logout(){
+		if(in_play){
+			$("#legend").hide();
+			$("#stage").hide();
+			$("#Worlds").show();
+			$("#play").show();
+			$("#killcounts").hide();
+			$("#createWorld").show();
+			$("#controls_display").hide();
+			setImage(stage.player.x,stage.player.y,blankImageSrc);
+				for(var y=0;y<players_in_world.length;y++){
+						var tag = '#row_' + players_in_world[y] 
+						$(tag).remove();
+					}
+
+			socket.send(JSON.stringify({operation: "playerDied", world: world, id: stage.player.id, x:stage.player.x, y:stage.player.y}));
+			stage.actors.splice(stage.actors.indexOf(stage.player),1);
+			stage.player.id="";
+			world = "";
+			player_is_new=true;
+			in_play = false;
+				var ref = '#display_' + stage.player.id;
+			$(ref).remove(); 
+			for(var i=0; i<all_players.length; i++){
+				for(var j=0; j<all_players[i].length; j++){
+					if(stage.player.id in all_players[i]){
+						all_players[i].splice(all_players[i].indexOf(stage.player.id), 1);
+					}	
+				}
+						
+			}
+		//	all_players.push(players_in_world);	
+			players_in_world = []; 
+			stage.actors = [] 
+			display_worlds(custom_worlds);
+			custom_worlds = [];
+		}
+	}
+ // get a world object representation given a string of worlds name
+	function get_world_choice(){
+		choice="";
+		for(var i = 0; i < worlds.length; i++){
+			if(document.getElementById(worlds[i]).checked){
+				choice = worlds[i];
+				if (choice == 'monstersInc'){
+					document.getElementById('playerImage').src = 'icons/clipboo21.gif';
+					playerImageSrc = document.getElementById('playerImage').src;
+					document.getElementById('monsterImage').src ='icons/James_P._Sullivan.png';
+					monsterImageSrc = document.getElementById('monsterImage').src;
+				}
+				else if (choice == 'incredibles'){
+					document.getElementById('playerImage').src = "icons/Dash.png";
+					playerImageSrc = document.getElementById('playerImage').src;
+					document.getElementById('monsterImage').src = "icons/omnidroid.jpg";
+					monsterImageSrc = document.getElementById('monsterImage').src;
+				}
+				else if (choice == 'nemo'){
+					document.getElementById('playerImage').src = "icons/nemo.png";
+					playerImageSrc = document.getElementById('playerImage').src;
+					document.getElementById('monsterImage').src = "icons/shark.jpg";
+					monsterImageSrc = document.getElementById('monsterImage').src;
+				}
+				players_in_world = all_players[i];
+				return choice;
+			}
+		}
+		return choice;
+	}
+	function playerDied(){
+		for (var i=0; i<stage.actors.length; i++){
+			if(stage.actors[i] instanceof Monster && stage.actors[i].x == stage.player.x && stage.actors[i].y == stage.player.y){
+				alert("you are DEAD"); 
+				// remove your killcounts from board
+			
+				logout();
+				
+			}
+		}
+	}
+		// player chose a world and wants to play 
+		$("#play").click(function(){	  
+			$("#Worlds").hide(); 
+			$("#play").hide();
+			$("#legend").show();
+			$("#stage").show();
+			$("#killcounts").show();
+			$("#controls_display").show();
+				var is_custom = false;
+				// client made a custom world
+				if (document.getElementById('custom').checked){
+				//make sure input field not empty
+					$("#legend").hide();
+					var new_world_name = document.getElementById('create_form').value
+					if(new_world_name= null  || new_world_name == "Enter new World name" ){
+						alert("give your world a name");
+						}
+					world = document.getElementById('create_form').value;
+					worlds.push(world);   // !?!?         ***********
+					custom_worlds.push(world);     // !?!?!  ********
+
+					is_custom = true;
+				}
+			  else {
+			  		world = get_world_choice();
+			  }	
+				initializeStage();
+				in_play = true;
+				// tell the server what world you're in
+				socket.send(JSON.stringify({operation: "new_client", world: world , custom: is_custom}));
+				
+				});
+	
+		
+		// show the players that are in each world on home page
+		function display_players(players){
+			// for each world 
+			for(var i=0; i < all_players.length; i++){
+				this_worlds_players = all_players[i];
+				// display this worlds players beside it 
+				for(var j=0; j < this_worlds_players.length; j++){
+						var tag = '<li id=display_' +  this_worlds_players[i] + '>' +  'player_' + this_worlds_players[j] + '</li>';
+						var ref = '#' + worlds[i] + '_players';
+						$(ref).append(tag); 
+				} 
+			}
+			
+		}
+		function updateKillCounts(id){
+			 var ref = '#count_' + id;
+			 var el = $(ref);
+			 var num = parseInt(el.text());
+		          el.text(num + 1);
+		     var index = players_in_world.indexOf(id);
+		     killcounts[index] =   killcounts[index]  + 1;
+
+		     
+			
+		}
+		
+		function append_to_killcounts(id){
+			var tag = '<tr id=row_' + id + '><td> player_' + id  + ' : <p id=count_' + id + '>' + '0' + ' </p></td></tr>';
+			$("#killcounts").append(tag);
+		}
+		
+		function kill_monster(id){           // ADDED 
+			for (var i = 0 ; i < stage.actors.length; i ++){
+				var a = stage.actors[i];
+				if (a instanceof Monster){
+					if (a.id == id ){
+						setImage(a.x,a.y,blankImageSrc);
+						stage.actors.splice(i,1);
+					}
+				}
+					
+			}
+		}
+		
+		function display_killCounts(){
+			
+				
+			for(var y=0;y<players_in_world.length;y++){
+				if (players_in_world[y] == stage.player.id){
+						var tag = '<tr id=row_' + players_in_world[y] + '><td> player_' + players_in_world[y]  + ' (YOU) : <p id=count_' + players_in_world[y] + '>' + killcounts[y] + ' </p></td></tr>';
+					$("#killcounts").append(tag);
+					
+				}
+			else{
+				var tag = '<tr id=row_' + players_in_world[y] + '><td> player_' + players_in_world[y]  + ' : <p id=count_' + players_in_world[y] + '>' + killcounts[y] + ' </p></td></tr>';
+				$("#killcounts").append(tag);
+				}
+			}
+	
+		}
+
+	// show all the worlds on home page
+		function display_worlds(worlds){
+			for(var i=0; i<worlds.length; i++){
+				var id = worlds[i];
+				var tag = worlds[i] + '<input type="radio" name="world" id='  + id +  ' value=' + worlds[i] + '><ul id=' + worlds[i] + '_players></ul><br>';
+				$('#Worlds').append(tag);
+			}
+		}
+		
+				function populateRandomList(){
+
+		}
+		
+		$(function(){
+			
+	 	
+							if (window.DeviceOrientationEvent) {
+					    window.addEventListener("deviceorientation", function(event) {
+						// alpha: rotation around z-axis
+						
+						var gamma = event.gamma;
+						// beta: front back motion
+						var beta = event.beta;
+						if(beta >16){
+					      stage.movePlayer(1,0,stage.player.id);
+						}
+						if(beta <-16){
+							stage.movePlayer(0,-1,stage.player.id);
+						}
+						if(gamma >16){
+							stage.movePlayer(1,0,stage.player.id);
+						}
+						if(gamma <-16){
+							stage.movePlayer(-1,0,stage.player.id);
+						}
+						});
+					}
+			
+				//});
+				
+		
+			$("#legend").hide();
+			$("#killcounts").hide();
+			$("#controls_display").hide();
+			socket = new WebSocket("ws://cslinux.utm.utoronto.ca:10460");
+			socket.onopen = function (event) {
+					socket.onmessage = function (event) {
+					     var data = JSON.parse(event.data);
+					    // if this player is new, listen for server's pre-set up message with the list of worlds
+					    if(!in_play){
+					    	if(data.operation == "pre_setup"){
+					    		worlds = data.worlds;
+							all_players = data.players;
+							all_killcounts = data.killcounts; 
+					    		custom_worlds = data.worlds.slice(3,data.worlds.length);
+					    		display_worlds(custom_worlds);
+					    		display_players(data.players);
+					    		//populateRandomList();
+					    	}
+					    }
+					    // player has chosen a world and wants to play
+					     if(player_is_new && in_play){
+						// wait for the server's setup message intended for new users 
+							if (data.operation == "setup" && data.world == world){
+								// setup a local copy of stage 
+								spawnActors(data);
+								populateStage();
+								//stage.player = new Player(data.client_player[1],data.client_player[2],data.client_player[3], playerImageSrc);
+								killcounts = data.kill_counts;
+								
+								display_killCounts();
+								player_is_new= false;
+							}
+							if (window.DeviceMotionEvent) {
+						    		window.addEventListener("devicemotion", function(event) {
+							// alpha: rotation around z-axis
+								
+							   	var z = event.accelerationIncludingGravity.z;		
+						
+								if(z<-20 || z>5){
+									alert("you have logged out"); 
+									logout();
+								}
+							    
+								});
+							}	
+					    }
+						// player has already been initialized 
+				else{
+				     // check if player is surrounded by monsters 
+						playerDied();
+					
+		
+				    // a new player (that is not this player) has joined this world
+
+				        if(data.operation == "new_player" && data.world ==world && data.id != stage.player.id){
+						alert("new player has joined with id " + data.id);
+						addPlayer(data.id, data.x, data.y);
+						append_to_killcounts(data.id); 	  
+							} 
+						if (data.operation == "new_player"){
+							var tag = '<li id=display_' + data.id + '>' +  'player_' + data.id + '</li>';
+							var ref = '#' + data.world+ '_players';
+							$(ref).append(tag); 
+							
+						}
+				    // server says that a monster has moved on the stage in this world
+				    	if(data.operation == "move" && data.world == world && data.id != stage.player.id){
+						moveActor(data.id, false, data.dx, data.dy);         //CHANGED
+						playerDied();
+					}
+					
+					// another player or box on the board wants to move 
+					if(data.operation == "move_player" && data.world == world && data.id != stage.player.id){
+					// a player or box (that another player pushed) wants to move
+ 					  if ((!data.box) || ((data.box) && (data.pushed_by != stage.player.id))){
+						moveActor(data.id, data.box, data.dx, data.dy);            // CHANGED 
+						}
+					}
+					if(data.operation == "update_killCount" && data.world == world){
+						if (data.killed_by != stage.player.id){
+							kill_monster(data.monster_id); 
+						}
+						updateKillCounts(data.killed_by);
+					
+						}
+					if(data.operation == "player_isDead"){
+								var ref = '#display_' + data.id;
+								$(ref).remove(); 
+								var ref2 = '#row_' + data.id;
+								$(ref2).remove();
+								var ind = players_in_world.indexOf(data.id);
+								players_in_world.splice(ind,1);
+								killcounts.splice(ind,1);
+					  if(data.world == world){
+						for (var i=0; i<stage.actors.length; i++)
+						{
+							if(stage.actors[i].id == data.id){
+								stage.actors.splice(stage.actors.indexOf(stage.actors[i]),1);
+								// remove this player from players display 
+					
+								} 
+							}	
+						setImage(data.x,data.y,blankImageSrc);
+					}
+				 }
+					
+				}   
+			   };
+			};
+		socket.onclose = function (event) {
+
+				
+			};		
+			
+		});
+	
+	
+		</script>
+	
+	</body>
+</html>
+			
